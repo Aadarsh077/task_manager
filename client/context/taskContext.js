@@ -8,7 +8,10 @@ const TasksContext = createContext();
 const serverUrl = "https://task-manager-caf1.onrender.com";
 
 export const TasksProvider = ({ children }) => {
-  const userId = useUserContext().user._id;
+  //const userId = useUserContext().user._id;
+  const { user } = useUserContext();
+  const userId = user?._id;
+
 
   const [tasks, setTasks] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
