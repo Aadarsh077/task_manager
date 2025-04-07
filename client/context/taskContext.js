@@ -1,5 +1,5 @@
 import axios from "axios";
-import React, { createContext, useEffect, useState } from "react";
+import React, { createContext, useEffect } from "react";
 import { useUserContext } from "./userContext";
 import toast from "react-hot-toast";
 
@@ -8,17 +8,18 @@ const TasksContext = createContext();
 const serverUrl = "https://task-manager-caf1.onrender.com/api/v1";
 
 export const TasksProvider = ({ children }) => {
-  const { user } = useUserContext(); // ✅ Safely access user
-  const userId = user?._id; // ✅ Avoid crashing if user is undefined
+  const userId = useUserContext().user._id;
 
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [task, setTask] = useState({});
-  const [isEditing, setIsEditing] = useState(false);
-  const [priority, setPriority] = useState("all");
-  const [activeTask, setActiveTask] = useState(null);
-  const [modalMode, setModalMode] = useState("");
-  const [profileModal, setProfileModal] = useState(false);
+
+  const [tasks, setTasks] = React.useState([]);
+  const [loading, setLoading] = React.useState(false);
+  const [task, setTask] = React.useState({});
+
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [priority, setPriority] = React.useState("all");
+  const [activeTask, setActiveTask] = React.useState(null);
+  const [modalMode, setModalMode] = React.useState("");
+  const [profileModal, setProfileModal] = React.useState(false);
 
   const openModalForAdd = () => {
     setModalMode("add");
@@ -46,25 +47,24 @@ export const TasksProvider = ({ children }) => {
 
   // get tasks
   const getTasks = async () => {
-    if (!userId) return; // ✅ Skip fetching if user is not available
     setLoading(true);
     try {
       const response = await axios.get(`${serverUrl}/tasks`);
-      const fetchedTasks = response?.data?.tasks ?? []; // ✅ Safe fallback
-      setTasks(fetchedTasks);
+
+      setTasks(response.data.tasks);
     } catch (error) {
       console.log("Error getting tasks", error);
     }
     setLoading(false);
   };
 
-  // get single task
+  // get task
   const getTask = async (taskId) => {
     setLoading(true);
     try {
       const response = await axios.get(`${serverUrl}/task/${taskId}`);
-      const fetchedTask = response?.data ?? {};
-      setTask(fetchedTask);
+
+      setTask(response.data);
     } catch (error) {
       console.log("Error getting task", error);
     }
@@ -75,11 +75,11 @@ export const TasksProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.post(`${serverUrl}/task/create`, task);
-      const newTask = res?.data ?? null;
-      if (newTask) {
-        setTasks([...tasks, newTask]);
-        toast.success("Task created successfully");
-      }
+
+      console.log("Task created", res.data);
+
+      setTasks([...tasks, res.data]);
+      toast.success("Task created successfully");
     } catch (error) {
       console.log("Error creating task", error);
     }
@@ -90,30 +90,32 @@ export const TasksProvider = ({ children }) => {
     setLoading(true);
     try {
       const res = await axios.patch(`${serverUrl}/task/${task._id}`, task);
-      const updatedTask = res?.data ?? null;
-      if (updatedTask) {
-        const newTasks = tasks.map((tsk) =>
-          tsk._id === updatedTask._id ? updatedTask : tsk
-        );
-        setTasks(newTasks);
-        toast.success("Task updated successfully");
-      }
+
+      // update the task in the tasks array
+      const newTasks = tasks.map((tsk) => {
+        return tsk._id === res.data._id ? res.data : tsk;
+      });
+
+      toast.success("Task updated successfully");
+
+      setTasks(newTasks);
     } catch (error) {
       console.log("Error updating task", error);
     }
-    setLoading(false);
   };
 
   const deleteTask = async (taskId) => {
     setLoading(true);
     try {
       await axios.delete(`${serverUrl}/task/${taskId}`);
+
+      // remove the task from the tasks array
       const newTasks = tasks.filter((tsk) => tsk._id !== taskId);
+
       setTasks(newTasks);
     } catch (error) {
       console.log("Error deleting task", error);
     }
-    setLoading(false);
   };
 
   const handleInput = (name) => (e) => {
@@ -124,12 +126,17 @@ export const TasksProvider = ({ children }) => {
     }
   };
 
+  // get completed tasks
   const completedTasks = tasks.filter((task) => task.completed);
+
+  // get pending tasks
   const activeTasks = tasks.filter((task) => !task.completed);
 
   useEffect(() => {
     getTasks();
-  }, [userId]); // ✅ Refetch when userId becomes available
+  }, [userId]);
+
+  console.log("Active tasks", activeTasks);
 
   return (
     <TasksContext.Provider
@@ -137,6 +144,7 @@ export const TasksProvider = ({ children }) => {
         tasks,
         loading,
         task,
+        tasks,
         getTask,
         createTask,
         updateTask,
