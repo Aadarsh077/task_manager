@@ -36,7 +36,7 @@ function LoginForm() {
             onChange={(e) => handlerUserInput("email")(e)}
             name="email"
             className="px-4 py-3 border-[2px] rounded-md outline-[#2ECC71] text-gray-800"
-            placeholder="johndoe@gmail.com"
+            placeholder="your_email@gmail.com"
           />
         </div>
         <div className="relative mt-[1rem] flex flex-col">

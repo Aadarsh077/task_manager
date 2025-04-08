@@ -64,6 +64,8 @@ body {
   position: relative;
 }
 
+
+
 .auth-page {
   height: 100vh;
   background: url("../public/glass-bg.png") no-repeat center center fixed;
